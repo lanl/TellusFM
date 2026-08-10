@@ -83,7 +83,7 @@ TellusFM experiments are configured with YAML files. Example configs are in `exa
 
 | Config | Purpose |
 | --- | --- |
-| `example/train_rule_based.yaml` | Rule-based (FWB) training config. |
+| `example/train_rule_based.yaml` | Rule-based training config. |
 | `example/train_phase_field.yaml` | Phase-field training config. |
 | `example/train_mixed.yaml` | Mixed rule-based + phase-field training config. |
 | `example/test_phase_field.yaml` | Phase-field testing config. |
@@ -93,12 +93,12 @@ See [example/YAML_OPTIONS.md](example/YAML_OPTIONS.md) for detailed documentatio
 
 ### Data & Datasets
 
-This repository includes the **orthogonal and random test sets** (both data and external link tables) used to create results S4–S6 in the paper.
+This repository includes the **orthogonal and curved test sets** (both data and external link tables) used to create results S4–S6 in the manuscript.
 
 **Additional test data** is available on Hugging Face:
 - High density test set
 - Low density test set  
-- Curved test set
+- Random test set
 
 To use these additional datasets:
 
