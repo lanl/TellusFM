@@ -3,7 +3,7 @@ __pycache__/
 .env
 .DS_Store
 .vscode/
-#data/
+data/
 example/lightning_logs
 example/logs
 example/test_runs
