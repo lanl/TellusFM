@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.DS_Store
+.vscode/
+data/
+example/lightning_logs
+example/logs
+example/test_runs
+models/
+build/
+*.egg-info/
