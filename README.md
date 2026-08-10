@@ -26,7 +26,7 @@ Install a new environment
 (for other options such as `conda` or `uv`, see [DETAILED_GUIDE.md](DETAILED_GUIDE.md)) 
 
 ```bash
-python -m venv tellusfm-env
+python3 -m venv tellusfm-env
 source tellusfm-env/bin/activate
 ```
 
