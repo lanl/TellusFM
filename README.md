@@ -15,7 +15,7 @@ TellusFM draws inspiration from **Roman mythology**, where *Tellus*, the goddess
 
 ## Quick Start
 
-Clonse the repository
+Clone the repository
 
 ```bash
 git clone git@github.com:lanl/TellusFM.git
@@ -37,13 +37,13 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-(Optional) Validate the paths used in the examples:
+(Optional) Validate the paths used in the examples
 
 ```bash
 python example/validate_config.py --show-paths
 ```
 
-Download the fracture model from Huggingface
+Download the fracture foundation model from Huggingface 
 
 ```bash
 mkdir -p models
