@@ -83,7 +83,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ## Citation
 
-If you use **TellusFM** in your research, please cite:
-```
-Marcato, Agnese, Aleksandra Pachalieva, Ryley G. Hill, Kai Gao, Xiaoyu Wang, Esteban Rougier, Zhou Lei et al. "A foundation model for material fracture prediction." arXiv preprint arXiv:2507.23077 (2025).
+If you use **TellusFM** in your research, please cite the following work:
+
+> Marcato, A., Pachalieva, A., Hill, R. G., Gao, K., Wang, X., Rougier, E., Lei, Z., et al. (2025). “A foundation model for material fracture prediction.” *arXiv preprint arXiv:2507.23077*.
+
+[View the paper on arXiv](https://arxiv.org/abs/2507.23077)
 
