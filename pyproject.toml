@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tellusfm"
+version = "0.1"
+description = "Foundation Model for material discovery, structured composites, fracture propagation, and flow dynamics."
+readme = "README.md"
+authors = [
+  { name = "Aleksandra Pachalieva", email = "apachalieva@lanl.gov" },
+  { name = "Jeffrey Hyman", email = "jhyman@lanl.gov" },
+  { name = "Agnese Marcato", email = "agnese.marcato@polito.it" }
+]
+license = { text = "BSD-3-Clause" }
+requires-python = ">=3.8"
+
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "torch",
+    "pytorch-lightning",
+    "tqdm",
+    "PyYAML",
+    "h5py",
+    "einops",
+    "fairscale",
+    "sphinx",
+    "sphinx-rtd-theme"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["build*", "dist*", "*.egg-info*", "tests*"]
