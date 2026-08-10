@@ -33,8 +33,8 @@ source tellusfm-env/bin/activate
 Install the required packages
 
 ```bash
-pip install -r requirements.txt
-pip install -e .
+python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install -e .
 ```
 
 (Optional) Validate the paths used in the examples
