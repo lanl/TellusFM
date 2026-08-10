@@ -36,8 +36,8 @@ source tellusfm-env/bin/activate
 #### Option B: Using `conda`
 
 ```bash
-conda create -n tellusfm python=3.12
-conda activate tellusfm
+conda create -n tellusfm-env python=3.12
+conda activate tellusfm-env
 ```
 
 #### Option C: Using `uv` (faster and recommended)
