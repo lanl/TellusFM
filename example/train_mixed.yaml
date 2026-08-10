@@ -1,0 +1,60 @@
+model_params:
+  num_workers: 1
+  num_nodes: 1
+  devices: 1
+  seed: 95
+  batch_pixels: 10000
+  lr: 0.0001
+  accum_grads: 64
+  warmup_steps: 990000
+  max_steps: 100000000
+  gradient_clip_val: 0.5
+  weight_decay: 0.01
+  sim_type: 'MIXED'
+  sim_weights:
+    RB: 0.2
+    PHASE: 0.8
+  accelerator: cpu 
+  space_bands: 32
+  check_val_every_n_epoch: 1 
+  every_n_epochs: 1 
+  every_n_train_steps: 10
+  flush_logs_every_n_steps: 10000
+  number_samples_per_epoch: 10
+  #number_samples_per_epoch: 1000
+  path_working_directory: '.'
+
+encoder:
+  enc_preproc_ch: 512
+  num_latents: 2048
+  enc_num_latent_channels: 512
+  num_layers: 3
+  num_cross_attention_heads: 2
+  enc_num_self_attention_heads: 2
+  num_self_attention_layers_per_block: 3
+  dropout: 0.0
+
+decoder:
+  dec_preproc_ch: 512
+  dec_num_latent_channels: 512
+  dec_num_cross_attention_heads: 1
+  latent_size: 1
+
+checkpoints:
+  load_model_num: '../models/train-epoch=4714.ckpt'
+  run_type: 'train'
+
+datasets:
+  path_phase: '../data/phase_field/external_links/train_link.h5'
+  path_val_phase: '../data/phase_field/external_links/validation_link.h5'
+
+embeddings:
+  emb_rule_based: '../data/rule_based/embeddings'
+  emb_phase: '../data/phase_field/embeddings'
+
+
+rule_based_params:
+  n: 100
+  m: 100
+  numfractures: 20
+  numtimesteps: 100
