@@ -60,7 +60,14 @@ Run a test using the test datasets included in the git repository
 python example/run_all_phase_tests.py --pattern "ortho|curved"
 ```
 
+
+Results are saved in `example/test_runs/<timestamp>/`:
+- `summary.csv` — metrics for each test
+- `summary.json` — detailed results in JSON format
+- `<test_name>/` — per-test directory with logs and outputs
+
 For more information on where to find the other training, validation and test sets, see [DETAILED_GUIDE.md](DETAILED_GUIDE.md)) or contact Agnese Marcato ([agnese.marcato@polito.it](mailto:agnese.marcato@polito.it)) or Aleksandra Pachalieva ([apachalieva@lanl.gov](mailto:apachalieva@lanl.gov)).
+
 
 
 ### Notice of Copyright Assertion (O4924):
