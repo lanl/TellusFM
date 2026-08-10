@@ -48,9 +48,7 @@ Download the fracture foundation model from Huggingface
 ```bash
 mkdir -p models
 cd models
-hf download smartFRACs/material_fracturing_model 
- material_fracturing_foundation_model.ckpt 
- --local-dir .
+hf download smartFRACs/material_fracturing_model material_fracturing_foundation_model.ckpt --local-dir .
 cd ..
 ```
 
