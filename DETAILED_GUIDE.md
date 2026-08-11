@@ -282,13 +282,25 @@ python example/run_all_phase_tests.py --test-bc vertical
 
 ## Building Documentation
 
+If you generated the Sphinx project with `sphinx-quickstart docs`, the source files live under `docs/source`.
+
+Build the HTML with either the generated Makefile:
+
 ```bash
-$ sphinx-build -b html docs docs/_build/html
+cd docs
+make html
 ```
 
-Then open the docs:
+or by calling Sphinx directly on the source directory:
+
+```bash
+sphinx-build -b html docs/source docs/_build/html
 ```
-docs/_build/html/index.html
+
+Then open the docs from the built output:
+
+```bash
+open docs/_build/html/index.html
 ```
 
 
