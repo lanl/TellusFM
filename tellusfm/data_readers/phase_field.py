@@ -26,7 +26,7 @@ def _load_phase_field(self):
         material, direction, bc, idx = match.groups()
     else:
         raise ValueError(f"Could not parse phase-field fracture key: {fracture_key}")
-
+    
     material = mat_h5_type[material]
     hdf5_file = self._get_hdf5_file("PHASE")
     frac_data=hdf5_file[fracture_key]
@@ -53,7 +53,7 @@ def _load_phase_field(self):
     if requested_orientation is not None:
         orientation = requested_orientation
     elif bc == "z":
-        print("Validation sample: ", validation_sample)
+        #print("Validation sample: ", validation_sample)
         if validation_sample is None:
             orientation = random.choice(["vertical", "horizontal"])
         else:
