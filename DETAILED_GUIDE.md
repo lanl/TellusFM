@@ -291,16 +291,16 @@ cd docs
 make html
 ```
 
-or by calling Sphinx directly on the source directory:
+or by calling Sphinx directly from `docs/`:
 
 ```bash
-sphinx-build -b html docs/source docs/_build/html
+sphinx-build -b html source _build/html
 ```
 
 Then open the docs from the built output:
 
 ```bash
-open docs/_build/html/index.html
+open _build/html/index.html
 ```
 
 

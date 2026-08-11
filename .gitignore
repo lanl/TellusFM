@@ -9,4 +9,6 @@ example/logs
 example/test_runs
 models/
 build/
+docs/_build/
+docs/build/
 *.egg-info/
