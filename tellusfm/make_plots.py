@@ -292,7 +292,8 @@ def _save_test_patterns(self, inputs, mesh, targets, predictions, batch_idx, met
     sample_label = metadata.get("sample_label", str(batch_idx)).replace(os.sep, "_").replace(" ", "_")
     # Add metadata and metrics text below the figure
     meta_lines = [f"sample: {sample_label}"]
-    for k in ("dataset_key", "sample_index", "method_label", "embedding_index", "orientation", "mat", "bc"):
+    #for k in ("dataset_key", "sample_index", "method_label", "embedding_index", "orientation", "mat", "bc"):
+    for k in ("method_label", "orientation", "mat", "bc"):
         if k in metadata:
             meta_lines.append(f"{k}: {metadata[k]}")
     meta_lines.append(f"MSE: {mse:.6g}")
