@@ -26,15 +26,15 @@ Install a new environment
 (for other options such as `conda` or `uv`, see [DETAILED_GUIDE.md](DETAILED_GUIDE.md)) 
 
 ```bash
-python -m venv tellusfm-env
+python3 -m venv tellusfm-env
 source tellusfm-env/bin/activate
 ```
 
 Install the required packages
 
 ```bash
-pip install -r requirements.txt
-pip install -e .
+python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install -e .
 ```
 
 (Optional) Validate the paths used in the examples
@@ -48,9 +48,7 @@ Download the fracture foundation model from Huggingface
 ```bash
 mkdir -p models
 cd models
-hf download smartFRACs/material_fracturing_model 
- material_fracturing_foundation_model.ckpt 
- --local-dir .
+hf download smartFRACs/material_fracturing_model material_fracturing_foundation_model.ckpt --local-dir .
 cd ..
 ```
 
