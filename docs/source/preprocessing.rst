@@ -1,5 +1,5 @@
 Preprocessing and Data Preparation
-=================================
+====================================
 
 TellusFM uses HDF5 external link tables to organize simulation data without duplicating large files.
 The preprocessing pipeline includes:
