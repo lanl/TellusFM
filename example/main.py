@@ -7,7 +7,7 @@ import torch.distributed as dist
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.loggers import CSVLogger
 from pytorch_lightning.loggers import TensorBoardLogger
-#from pytorch_lightning.strategies import DDPStrategy
+from pytorch_lightning.strategies import DDPStrategy
 
 import tellusfm as tfm 
 
@@ -202,7 +202,7 @@ if __name__ == '__main__':
                            check_val_every_n_epoch = model_config["check_val_every_n_epoch"],
                            num_nodes = model_config['num_nodes'],
                            logger = loggers,
-                           strategy='ddp',
+                           strategy=DDPStrategy(find_unused_parameters=True),
                            gradient_clip_val = model_config['gradient_clip_val'],
             ) 
         

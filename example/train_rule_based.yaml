@@ -19,7 +19,7 @@ model_params:
   every_n_epochs: 1 
   every_n_train_steps: 10
   flush_logs_every_n_steps: 10000
-  number_samples_per_epoch: 1000
+  number_samples_per_epoch: 10
   path_working_directory: '.'
 
 encoder:
@@ -39,7 +39,7 @@ decoder:
   latent_size: 1
 
 checkpoints:
-  load_model_num: '../models/train-epoch=4714.ckpt'
+  load_model_num: '../models/material_fracturing_foundation_model.ckpt'
   run_type: 'train'
 
 embeddings:

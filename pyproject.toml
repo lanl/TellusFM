@@ -20,11 +20,14 @@ dependencies = [
     "matplotlib",
     "torch",
     "pytorch-lightning",
+    "tensorboard",
     "tqdm",
     "PyYAML",
     "h5py",
     "einops",
     "fairscale",
+    "huggingface-hub",
+    "scikit-image",
     "sphinx",
     "sphinx-rtd-theme"
 ]
