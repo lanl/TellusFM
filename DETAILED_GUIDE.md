@@ -167,19 +167,19 @@ python example/validate_config.py --show-paths example/train_phase_field.yaml
 Start training with a rule-based config:
 
 ```bash
-python example/main.py --config example/train_rule_based.yaml --log_filename rule_based_run
+python example/main.py --config example/train_rule_based.yaml --log_filename example/rule_based_run
 ```
 
 For phase-field training:
 
 ```bash
-python example/main.py --config example/train_phase_field.yaml --log_filename phase_field_run
+python example/main.py --config example/train_phase_field.yaml --log_filename example/phase_field_run
 ```
 
 For mixed training (both rule-based and phase-field):
 
 ```bash
-python example/main.py --config example/train_mixed.yaml --log_filename mixed_run
+python example/main.py --config example/train_mixed.yaml --log_filename example/mixed_run
 ```
 
 ### Training outputs
@@ -200,7 +200,7 @@ Training generates:
 Test with a single config file:
 
 ```bash
-python example/main.py --config example/test_phase_field.yaml --log_filename test_run
+python example/main.py --config example/test_phase_field.yaml --log_filename example/test_run
 ```
 
 ### Run all phase-field tests
