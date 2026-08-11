@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Example Usage &#8212; TellusFM 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Preprocessing and Data Preparation" href="preprocessing.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="example-usage">
+<h1>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h1>
+<p>The <cite>example/</cite> directory contains the main entry points for training, validation, and testing.</p>
+<section id="running-training">
+<h2>Running training<a class="headerlink" href="#running-training" title="Link to this heading">¶</a></h2>
+<p>Start rule-based training:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>example/main.py<span class="w"> </span>--config<span class="w"> </span>example/train_rule_based.yaml<span class="w"> </span>--log_filename<span class="w"> </span>example/rule_based_run
+</pre></div>
+</div>
+<p>Start phase-field training:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>example/main.py<span class="w"> </span>--config<span class="w"> </span>example/train_phase_field.yaml<span class="w"> </span>--log_filename<span class="w"> </span>example/phase_field_run
+</pre></div>
+</div>
+<p>Start mixed training:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>example/main.py<span class="w"> </span>--config<span class="w"> </span>example/train_mixed.yaml<span class="w"> </span>--log_filename<span class="w"> </span>example/mixed_run
+</pre></div>
+</div>
+</section>
+<section id="training-outputs">
+<h2>Training outputs<a class="headerlink" href="#training-outputs" title="Link to this heading">¶</a></h2>
+<p>Outputs and logs are saved under the directory specified by <cite>model_params.path_working_directory</cite> in the config.
+Typical outputs include:</p>
+<ul class="simple">
+<li><p><cite>lightning_logs/</cite> for TensorBoard and checkpoint history</p></li>
+<li><p><cite>logs/</cite> for CSV training and validation metrics</p></li>
+<li><p>text log files with summaries and configuration details</p></li>
+</ul>
+</section>
+<section id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Link to this heading">¶</a></h2>
+<p>Run a single phase-field test config:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>example/main.py<span class="w"> </span>--config<span class="w"> </span>example/test_phase_field.yaml<span class="w"> </span>--log_filename<span class="w"> </span>example/test_run
+</pre></div>
+</div>
+<p>Run the phase-field sweep helper:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>example/run_all_phase_tests.py
+</pre></div>
+</div>
+<p>The helper script writes results to <cite>example/test_runs/&lt;timestamp&gt;/</cite>.</p>
+<p>Select specific tests by pattern:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>example/run_all_phase_tests.py<span class="w"> </span>--pattern<span class="w"> </span><span class="s2">&quot;lowDensity|highDensity&quot;</span>
+</pre></div>
+</div>
+<p>Additional options:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>example/run_all_phase_tests.py<span class="w"> </span>--dry-run
+python<span class="w"> </span>example/run_all_phase_tests.py<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
+python<span class="w"> </span>example/run_all_phase_tests.py<span class="w"> </span>--stop-on-error
+python<span class="w"> </span>example/run_all_phase_tests.py<span class="w"> </span>--test-bc<span class="w"> </span>vertical
+</pre></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">TellusFM</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">TellusFM Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Data Preparation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#running-training">Running training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training-outputs">Training outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="preprocessing.html" title="previous chapter">Preprocessing and Data Preparation</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Aleksandra Pachalieva, Agnese Marcato, Jeffrey D. Hyman.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/example_usage.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

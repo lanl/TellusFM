@@ -17,8 +17,7 @@ preprocessing/
 │   ├── embeddings.py        # Generate LLM embeddings for prompts
 │   └── README.md            # Embeddings documentation
 └── src_link_tables/         # Link table creation scripts
-    ├── create_links.py                      # Create rule-based link tables
-    ├── create_links_phase.py                # Create phase-field train/val link tables
+    ├── create_links_phase_train_val.py      # Create phase-field train/validation link tables
     └── create_links_phase_testset.py        # Create all phase-field test link tables
 ```
 
@@ -69,7 +68,7 @@ Use this to create link tables for phase-field training and validation data:
 
 ```bash
 cd preprocessing/src_link_tables
-python create_links_phase.py
+python create_links_phase_train_val.py
 ```
 
 This creates:
@@ -99,19 +98,6 @@ This creates test-specific link files:
 - `al_random_axial_link.h5`, `pbx_random_biaxial_link.h5`, etc. (random tests)
 - `al_lowDensity_*.h5`, `al_highDensity_*.h5`, etc. (density tests)
 
-### Rule-based training and validation link tables
-
-Create link tables for rule-based (FWB) data:
-
-```bash
-cd preprocessing/src_link_tables
-python create_links.py
-```
-
-This creates:
-- `data/rule_based/external_links/train_link.h5`
-- `data/rule_based/external_links/validation_link.h5`
-
 ## Embeddings generation
 
 LLM-based embeddings enrich the model with semantic information about fracture types, materials, and stress directions.
@@ -135,11 +121,8 @@ See [src_embeddings/README.md](src_embeddings/README.md) for detailed instructio
 4. **Create link tables**:
    ```bash
    cd src_link_tables
-   python create_links_phase.py
-   python create_links.py
+   python create_links_phase_train_val.py
    python create_links_phase_testset.py
-   python create_links_phase_testset_random.py
-   python create_links_phase_testset_density.py
    ```
 5. **Validate and run** (see main README.md Training and Testing sections)
 
