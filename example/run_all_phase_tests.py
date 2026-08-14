@@ -414,8 +414,8 @@ def main() -> int:
             return result["exit_code"] or 1
 
     failed = [result for result in results if result["status"] != "passed"]
-    print(f"\nWrote summary: {args.output_dir / 'mae_summary.csv'}")
-    print(f"Wrote summary: {args.output_dir / 'mae_summary.json'}")
+    print(f"\nWrote summary: {args.output_dir / 'summary.csv'}")
+    print(f"\nWrote summary: {args.output_dir / 'summary.json'}")
 
     if failed:
         print(f"Completed with {len(failed)} failed run(s).")
