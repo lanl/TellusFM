@@ -1,6 +1,5 @@
 # TellusFM — *Transformer Fracture Model*
 
----
 
 ## Overview
 
