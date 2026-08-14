@@ -45,7 +45,7 @@ checkpoints:
 
 datasets:
   path_phase: '../data/phase_field/external_links/train_link.h5'
-  path_val_phase: '../data/phase_field/external_links/validation_link.h5'
+  path_val_phase: '../data/phase_field/external_links/test_link.h5'
 
 embeddings:
   emb_rule_based: '../data/rule_based/embeddings'
