@@ -87,7 +87,7 @@ See [example/YAML_OPTIONS.md](example/YAML_OPTIONS.md) for detailed documentatio
 
 ### Data & Datasets
 
-This repository includes the **orthogonal and random test sets** (both data and external link tables) used to create results S4–S6 in the paper.
+This repository includes the **orthogonal and curved test sets** (both data and external link tables) used to create results S4–S6 in the paper.
 
 **Additional test data** is available on Hugging Face:
 - High density test set
