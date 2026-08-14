@@ -1,4 +1,4 @@
-# TellusFM — *Transformer Fracture Model*
+# TellusFM — A Pretrained Transferable Multitask Model for Material Fracture Prediction
 
 
 ## Overview
