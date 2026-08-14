@@ -28,7 +28,7 @@ from typing import Any
 
 
 
-SKIP_FILENAMES = {"train_link.h5", "validation_link.h5"}
+SKIP_FILENAMES = {"train_link.h5", "test_link.h5"}
 PATH_KEYS_BY_SECTION = {
     "model_params": ("path_working_directory",),
     "datasets": ("path_phase", "path_val_phase", "path_hoss", "path_val_hoss", "path_test"),
