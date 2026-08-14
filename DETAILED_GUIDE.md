@@ -92,7 +92,7 @@ This repository includes the **orthogonal and random test sets** (both data and 
 **Additional test data** is available on Hugging Face:
 - High density test set
 - Low density test set  
-- Curved test set
+- Random configuration test set
 
 To use these additional datasets:
 
