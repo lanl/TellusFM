@@ -142,10 +142,8 @@ if __name__ == '__main__':
             **embeddings_config
         )
     elif isinstance(checkpoints_config['load_model_num'], str):
-        print('in')
         base_dir = Path(config['_config_dir'])
         model_loc = tfm.normalize_config_path(checkpoints_config['load_model_num'], base_dir)
-        print(model_loc)
         model = tfm.Senseiver.load_from_checkpoint(
             checkpoint_path = model_loc,
             strict = False,
