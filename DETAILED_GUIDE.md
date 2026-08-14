@@ -1,15 +1,9 @@
-# TellusFM — *Transformer Fracture Model*
+# TellusFM — A Pretrained Transferable Multitask Model for Material Fracture Prediction
 
-> *“From the forge of Vulcan and the soil of Tellus — intelligence that understands the Earth.”*
-
----
 
 ## Overview
 
-**TellusFM** is a **Python-based transformer model** for simulating and learning the coupled processes of **flow, fracture, and material evolution**.  
-It bridges **machine learning**, **physics-informed modeling**, and **computational materials science** to enable *data-driven discovery* of emergent behaviors in complex materials.
-
-TellusFM draws inspiration from **Roman mythology**, where *Tellus*, the goddess of Earth, embodies strength, structure, and renewal — the perfect metaphor for a model designed to uncover the hidden language of matter.
+TellusFM is a Python package accompanying the manuscript on pretrained transferable transformer models for 2D material fracture prediction. The repository provides model code, example configurations, preprocessing utilities, pretrained weights, and small test datasets for reproducing the fracture-prediction workflows described in the paper.
 
 ---
 
