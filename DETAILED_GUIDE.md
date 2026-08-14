@@ -43,7 +43,7 @@ source tellusfm-env/bin/activate
 
 You should see the environment name in your terminal prompt when activated.
 
-### 4. Install dependencies
+### 3. Install dependencies
 
 After activating your environment, install the required packages:
 
@@ -59,7 +59,7 @@ uv pip install -r requirements.txt
 uv pip install -e .
 ```
 
-### 5. Validate your setup
+### 4. Validate your setup
 
 Before running training or tests, validate the default example configs:
 
