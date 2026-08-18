@@ -40,7 +40,7 @@ decoder:
   latent_size: 1
 
 checkpoints:
-  load_model_num: '../models/material_fracturing_foundation_model.ckpt'
+  load_model_num: '../models/material_fracturing_model.ckpt'
   run_type: 'train'
 
 datasets:

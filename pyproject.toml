@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tellusfm"
 version = "0.1"
-description = "Foundation Model for material discovery, structured composites, fracture propagation, and flow dynamics."
+description = "A Pretrained Transferable Multitask Model for Material Fracture Prediction."
 readme = "README.md"
 authors = [
   { name = "Aleksandra Pachalieva", email = "apachalieva@lanl.gov" },

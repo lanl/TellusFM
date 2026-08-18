@@ -1,15 +1,9 @@
-# TellusFM — *Transformer Fracture Model*
+# TellusFM — A Pretrained Transferable Multitask Model for Material Fracture Prediction
 
-> *“From the forge of Vulcan and the soil of Tellus — intelligence that understands the Earth.”*
-
----
 
 ## Overview
 
-**TellusFM** is a **Python-based transformer model** for simulating and learning the coupled processes of **flow, fracture, and material evolution**.  
-It bridges **machine learning**, **physics-informed modeling**, and **computational materials science** to enable *data-driven discovery* of emergent behaviors in complex materials.
-
-TellusFM draws inspiration from **Roman mythology**, where *Tellus*, the goddess of Earth, embodies strength, structure, and renewal — the perfect metaphor for a model designed to uncover the hidden language of matter.
+TellusFM is a Python package accompanying the manuscript on pretrained transferable transformer models for material fracture prediction. The repository provides model code, example configurations, preprocessing utilities, pretrained weights, and small test datasets for reproducing the fracture-prediction workflows described in the paper.
 
 ---
 
@@ -49,7 +43,7 @@ source tellusfm-env/bin/activate
 
 You should see the environment name in your terminal prompt when activated.
 
-### 4. Install dependencies
+### 3. Install dependencies
 
 After activating your environment, install the required packages:
 
@@ -65,7 +59,7 @@ uv pip install -r requirements.txt
 uv pip install -e .
 ```
 
-### 5. Validate your setup
+### 4. Validate your setup
 
 Before running training or tests, validate the default example configs:
 
@@ -93,12 +87,12 @@ See [example/YAML_OPTIONS.md](example/YAML_OPTIONS.md) for detailed documentatio
 
 ### Data & Datasets
 
-This repository includes the **orthogonal and random test sets** (both data and external link tables) used to create results S4–S6 in the paper.
+This repository includes the **orthogonal and curved test sets** (both data and external link tables) used to create results S4–S6 in the paper.
 
 **Additional test data** is available on Hugging Face:
 - High density test set
 - Low density test set  
-- Curved test set
+- Random configuration test set
 
 To use these additional datasets:
 
@@ -315,10 +309,3 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## Citation
-
-If you use **TellusFM** in your research, please cite the following work:
-
-> Marcato, A., Pachalieva, A., Hill, R. G., Gao, K., Wang, X., Rougier, E., Lei, Z., et al. (2025). “A foundation model for material fracture prediction.” *arXiv preprint arXiv:2507.23077*.
-
-[View the paper on arXiv](https://arxiv.org/abs/2507.23077)

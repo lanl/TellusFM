@@ -1,7 +1,7 @@
 
 from datetime import date
 
-__author__ = "Aleksandra Pachalieba <apachalieva@lanl.gov>, Jeffrey Hyman <jhyman@lanl.gov>, Agnese Marcato <agnese.marcato@polito.it>"
+__author__ = "Aleksandra Pachalieva <apachalieva@lanl.gov>, Jeffrey Hyman <jhyman@lanl.gov>, Agnese Marcato <agnese.marcato@polito.it>"
 __license__ = "BSD-3-Clause"
 __version__ = "0.1"
 __date__ = date.today().isoformat()  # e.g., '2025-07-23'
