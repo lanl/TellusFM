@@ -12,3 +12,5 @@ build/
 docs/_build/
 docs/build/
 *.egg-info/
+*.png
+*.log

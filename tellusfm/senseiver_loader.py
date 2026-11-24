@@ -49,6 +49,11 @@ class SenseiverLoaderTraining(Dataset):
         if self.num_embedding_variants < 1:
             raise ValueError("embeddings_config['num_embedding_variants'] must be at least 1")
         self.unstructured_mesh_scale = data_config.get("unstructured_mesh_scale", 1000.0)
+        self.hoss_materials = list(data_config.get("hoss_materials") or ["pbx", "shale", "tungsten"])
+        self.hoss_mesh_displacement = float(data_config.get("hoss_mesh_displacement") or 0.0)
+        self.hoss_orientations = list(data_config.get("hoss_orientations") or ["vertical", "horizontal"])
+        val_aug = data_config.get("hoss_val_data_aug")
+        self.hoss_val_data_aug = None if val_aug is None else int(val_aug)
 
         self.path_emb_by_sim = {
             "RB": embeddings_config.get("emb_rule_based"),

@@ -1,0 +1,50 @@
+# Evaluate a checkpoint on HOSS validation/test simulations (run_type: test).
+# Run from the repo root:  python example/main.py --config example/test_hoss.yaml --log_filename test_hoss
+model_params:
+  num_workers: 0
+  num_nodes: 1
+  devices: 1
+  seed: 95
+  batch_pixels: 10000
+  sim_type: 'HOSS'
+  sim_weights:
+    HOSS: 1.0
+  accelerator: cpu
+  space_bands: 32
+  path_working_directory: '.'
+  # folder for the test plots; relative paths are relative to path_working_directory (here: example/)
+  test_output_dir: 'test_hoss'
+  # must match the loss the checkpoint was trained with: sigmoid_sum (pretrained) or relu_mean (HOSS fine-tune)
+  loss_type: 'relu_mean'
+
+encoder:
+  enc_preproc_ch: 512
+  num_latents: 2048
+  enc_num_latent_channels: 512
+  num_layers: 3
+  num_cross_attention_heads: 2
+  enc_num_self_attention_heads: 2
+  num_self_attention_layers_per_block: 3
+  dropout: 0.0
+
+decoder:
+  dec_preproc_ch: 512
+  dec_num_latent_channels: 512
+  dec_num_cross_attention_heads: 1
+  latent_size: 1
+
+checkpoints:
+  load_model_num: '../models/hoss_finetuning.ckpt'
+  run_type: 'test'
+
+datasets:
+  path_test: '../data/hoss/external_links/validation_link.h5'
+  unstructured_mesh_scale: 1000.0
+  hoss_materials: [pbx]
+  # paper setup: horizontal only, no mesh flip, one pass per simulation
+  hoss_orientations: [horizontal]
+  hoss_val_data_aug: 3
+
+embeddings:
+  emb_hoss: '../data/hoss/embeddings'
+  num_embedding_variants: 20

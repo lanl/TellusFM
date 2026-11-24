@@ -4,9 +4,60 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from matplotlib.collections import LineCollection
 from pytorch_lightning.loggers import TensorBoardLogger
 
 mpl.rcParams['figure.max_open_warning'] = 0
+
+# Colour scheme of the HOSS figures in the paper: seaborn's "rocket_r" (cream -> orange -> red -> purple).
+# The colours below are every 17th entry of seaborn's 256-step "rocket" table (dark -> light), reversed
+# and interpolated, so seaborn is not needed at run time.
+_ROCKET_ANCHORS = [
+    (0.01060815, 0.01808215, 0.10018654), (0.10132312, 0.06286782, 0.16604287),
+    (0.19804623, 0.09465217, 0.23478512), (0.29977678, 0.11356089, 0.29254823),
+    (0.40642019, 0.12151801, 0.33288464), (0.51728314, 0.11795580, 0.35453252),
+    (0.63139686, 0.10067417, 0.35664819), (0.74297501, 0.08747196, 0.33329799),
+    (0.83850183, 0.14025098, 0.28768780), (0.90848638, 0.24568473, 0.24598324),
+    (0.94291042, 0.37549479, 0.26369821), (0.95681685, 0.49882008, 0.34555431),
+    (0.96298491, 0.61262470, 0.45145074), (0.96544032, 0.72010124, 0.57640375),
+    (0.97071849, 0.82151775, 0.71987163), (0.98137749, 0.92061729, 0.86536915),
+]
+ROCKET_R = mcolors.LinearSegmentedColormap.from_list("rocket_r", _ROCKET_ANCHORS[::-1], N=256)
+# In the paper figures a field value of 1 (a crack) is drawn in the dark purple at ~74% of the
+# colormap, not in the darkest colour; measured from the published PNG (darkest pixels ~ index 66/255).
+HOSS_VMIN, HOSS_VMAX = 0.0, 1.0 / 0.74
+
+
+def _plot_field(ax, mesh, values, metadata, cmap, vmin=None, vmax=None, min_value=None):
+    """Plot a field on an unstructured mesh.
+
+    If the sample carries line-segment geometry (HOSS), each segment is drawn as a line
+    coloured by its value; otherwise the points are drawn as a scatter plot.
+    If ``min_value`` is given, only elements with value >= min_value are drawn (e.g. only the cracks
+    of the initial configuration). Returns the mappable for the colour bar.
+    """
+    values = np.asarray(values).reshape(-1)
+    half = metadata.get("segment_half") if metadata is not None else None
+    if half is None:
+        return ax.scatter(mesh[:, 0], mesh[:, 1], c=values, s=0.7, cmap=cmap, vmin=vmin, vmax=vmax)
+
+    half = np.asarray(half.cpu() if hasattr(half, "cpu") else half).reshape(-1, 2)
+    # axis limits come from the whole mesh, so panels that draw only part of it keep the same frame
+    ends = np.concatenate([mesh - half, mesh + half])
+    lo, hi = ends.min(axis=0), ends.max(axis=0)
+    pad = 0.05 * (hi - lo)
+    if min_value is not None:
+        keep = values >= min_value
+        mesh, half, values = mesh[keep], half[keep], values[keep]
+    segments = np.stack([mesh - half, mesh + half], axis=1)       # (N, 2 endpoints, 2 coords)
+    # draw low values first so the cracks (high values) end up on top
+    order = np.argsort(values, kind="stable")
+    collection = LineCollection(segments[order], array=values[order], cmap=cmap, linewidths=0.6)
+    collection.set_clim(vmin, vmax)
+    ax.add_collection(collection)
+    ax.set_xlim(lo[0] - pad[0], hi[0] + pad[0])
+    ax.set_ylim(lo[1] - pad[1], hi[1] + pad[1])
+    return collection
 
 def _save_validation_patterns(self, inputs, mesh, targets, predictions, batch_idx, metadata):
 
@@ -22,7 +73,7 @@ def _save_validation_patterns(self, inputs, mesh, targets, predictions, batch_id
     data = data.squeeze()
     target = targets.cpu().detach().numpy()
     target = target.squeeze()
-    prediction = torch.sigmoid(predictions).cpu().detach().numpy()
+    prediction = self._field_prediction(predictions, self._loss_type_for(metadata)).cpu().detach().numpy()
     prediction = prediction.squeeze()
     if not metadata["is_unstructured"]:
         side_length = int(np.sqrt(data.shape[0]))
@@ -60,33 +111,30 @@ def _save_validation_patterns(self, inputs, mesh, targets, predictions, batch_id
         axs[3].axis('off')
         fig.colorbar(im, ax=axs[3], fraction=0.046, pad=0.04)
     else:
-        custom_cmap = plt.get_cmap('inferno_r')
-        cmap_array = custom_cmap(np.linspace(0, 1, 256))
-        cmap_array[0] = np.array([1.0, 1.0, 1.0, 1.0])
-        custom_cmap = mcolors.ListedColormap(cmap_array)
+        custom_cmap = ROCKET_R
 
-        scatter1 = axs[0].scatter(mesh[:, 0], mesh[:, 1], c=data, s=0.7, cmap=custom_cmap)
+        scatter1 = _plot_field(axs[0], mesh, data, metadata, custom_cmap, vmin=HOSS_VMIN, vmax=HOSS_VMAX, min_value=0.5)
         fig.colorbar(scatter1, ax=axs[0], fraction=0.046, pad=0.04)
         axs[0].set_title('Input')
         axs[0].set_xticks([])
         axs[0].set_yticks([])
         axs[0].set_aspect('equal', 'box')
 
-        scatter2 = axs[1].scatter(mesh[:, 0], mesh[:, 1], c=target, s=0.7, cmap=custom_cmap, vmax=1)
+        scatter2 = _plot_field(axs[1], mesh, target, metadata, custom_cmap, vmin=HOSS_VMIN, vmax=HOSS_VMAX)
         fig.colorbar(scatter2, ax=axs[1], fraction=0.046, pad=0.04)
         axs[1].set_title('Target')
         axs[1].set_xticks([])
         axs[1].set_yticks([])
         axs[1].set_aspect('equal', 'box')
 
-        scatter3 = axs[2].scatter(mesh[:, 0], mesh[:, 1], c=prediction, s=0.7, cmap=custom_cmap)
+        scatter3 = _plot_field(axs[2], mesh, prediction, metadata, custom_cmap, vmin=HOSS_VMIN, vmax=HOSS_VMAX)
         fig.colorbar(scatter3, ax=axs[2], fraction=0.046, pad=0.04)
         axs[2].set_title('Predicted')
         axs[2].set_xticks([])
         axs[2].set_yticks([])
         axs[2].set_aspect('equal', 'box')
 
-        scatter4 = axs[3].scatter(mesh[:, 0], mesh[:, 1], c=residual, s=0.7, cmap='seismic', vmin=-1, vmax=1)
+        scatter4 = _plot_field(axs[3], mesh, residual, metadata, 'seismic', vmin=-1, vmax=1)
         fig.colorbar(scatter4, ax=axs[3], fraction=0.046, pad=0.04)
         axs[3].set_title('Residual (Target-Predicted)')
         axs[3].set_xticks([])
@@ -208,14 +256,16 @@ def _save_test_patterns(self, inputs, mesh, targets, predictions, batch_idx, met
     except Exception:
         base_dir = getattr(self.hparams, 'path_working_directory', '.')
 
-    test_dir = os.path.join(base_dir, "test_samples")
+    # model_params.test_output_dir: folder name for the test plots (absolute, or relative to base_dir)
+    out_name = getattr(self.hparams, "test_output_dir", None) or "test_samples"
+    test_dir = out_name if os.path.isabs(out_name) else os.path.join(base_dir, out_name)
     os.makedirs(test_dir, exist_ok=True)
 
     data = inputs.cpu().detach().numpy()
     data = data.squeeze()
     target = targets.cpu().detach().numpy()
     target = target.squeeze()
-    prediction = torch.sigmoid(predictions).cpu().detach().numpy()
+    prediction = self._field_prediction(predictions, self._loss_type_for(metadata)).cpu().detach().numpy()
     prediction = prediction.squeeze()
 
     if not metadata.get("is_unstructured", False):
@@ -243,26 +293,23 @@ def _save_test_patterns(self, inputs, mesh, targets, predictions, batch_idx, met
         axs[2].set_title(f"Predicted")
         axs[2].axis('off')
     else:
-        custom_cmap = plt.get_cmap('inferno_r')
-        cmap_array = custom_cmap(np.linspace(0, 1, 256))
-        cmap_array[0] = np.array([1.0, 1.0, 1.0, 1.0])
-        custom_cmap = mcolors.ListedColormap(cmap_array)
+        custom_cmap = ROCKET_R
 
-        scatter1 = axs[0].scatter(mesh[:, 0], mesh[:, 1], c=data, s=0.7, cmap=custom_cmap)
+        scatter1 = _plot_field(axs[0], mesh, data, metadata, custom_cmap, vmin=HOSS_VMIN, vmax=HOSS_VMAX, min_value=0.5)
         fig.colorbar(scatter1, ax=axs[0])
         axs[0].set_title('Input')
         axs[0].set_xticks([])
         axs[0].set_yticks([])
         axs[0].set_aspect('equal', 'box')
 
-        scatter2 = axs[1].scatter(mesh[:, 0], mesh[:, 1], c=target, s=0.7, cmap=custom_cmap, vmax=1)
+        scatter2 = _plot_field(axs[1], mesh, target, metadata, custom_cmap, vmin=HOSS_VMIN, vmax=HOSS_VMAX)
         fig.colorbar(scatter2, ax=axs[1])
         axs[1].set_title('Target')
         axs[1].set_xticks([])
         axs[1].set_yticks([])
         axs[1].set_aspect('equal', 'box')
 
-        scatter3 = axs[2].scatter(mesh[:, 0], mesh[:, 1], c=prediction, s=0.7, cmap=custom_cmap)
+        scatter3 = _plot_field(axs[2], mesh, prediction, metadata, custom_cmap, vmin=HOSS_VMIN, vmax=HOSS_VMAX)
         fig.colorbar(scatter3, ax=axs[2])
         axs[2].set_title(f'Predicted')
         axs[2].set_xticks([])
@@ -293,7 +340,7 @@ def _save_test_patterns(self, inputs, mesh, targets, predictions, batch_idx, met
     # Add metadata and metrics text below the figure
     meta_lines = [f"sample: {sample_label}"]
     #for k in ("dataset_key", "sample_index", "method_label", "embedding_index", "orientation", "mat", "bc"):
-    for k in ("method_label", "orientation", "mat", "bc"):
+    for k in ("method_label", "orientation", "material"):#, "bc"):
         if k in metadata:
             meta_lines.append(f"{k}: {metadata[k]}")
     meta_lines.append(f"MSE: {mse:.6g}")

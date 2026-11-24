@@ -205,8 +205,10 @@ if __name__ == '__main__':
             ) 
         
         print("Starting trainer")
+        # resume_training: false -> weights are loaded above, trainer state starts fresh (fine-tuning)
+        resume_path = model_loc if checkpoints_config.get("resume_training", True) else None
         trainer.fit( model, dataloader, val_dataloader,
-                        ckpt_path=model_loc
+                        ckpt_path=resume_path
                     )
     else:
        with torch.no_grad():

@@ -85,7 +85,7 @@ for layer_num in layers_to_hook:
 # ---------------------------
 
 material_types = ['steel', 'pbx', 'aluminum', 'shale', 'tungsten']
-fracture_types = ["phase-field method", "T-fracture rule-based mode", "X-fracture rule-based mode"]
+fracture_types = ["finite-discrete element method", "phase-field method", "T-fracture rule-based mode", "X-fracture rule-based mode"]
 directions = ["horizontal", "combined", "vertical"]
 
 # ---------------------------

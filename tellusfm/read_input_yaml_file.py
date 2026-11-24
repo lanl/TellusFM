@@ -23,6 +23,11 @@ SIM_PATH_REQUIREMENTS = {
 
 SUPPORTED_SIM_TYPES = set(SIM_PATH_REQUIREMENTS)
 
+# Loss / output activation for the field prediction:
+#   sigmoid_sum : MSE(sigmoid(pred), target), summed over points (original TellusFM loss)
+#   relu_mean   : MSE(relu(pred), target), averaged over points (DI_fractures hoss branch)
+LOSS_TYPES = ("sigmoid_sum", "relu_mean")
+
 
 def normalize_config_path(value, base_dir=None):
     """
@@ -102,11 +107,23 @@ def get_default_config():
             "number_samples_per_epoch": 100000,
             #"single_loss_scale": 10000,
             "test_bc": "auto",
+            # Folder for the test plots: absolute, or relative to path_working_directory
+            "test_output_dir": "test_samples",
+            # Field loss. "loss_type_by_sim" overrides "loss_type" per simulation type,
+            # e.g. {"HOSS": "relu_mean"} to use a different loss for HOSS only.
+            "loss_type": "sigmoid_sum",
+            "loss_type_by_sim": {},
+            # Fine-tuning: list of substrings of parameter names that stay trainable
+            # (everything else is frozen). null trains all parameters.
+            "trainable": None,
         },
 
         "checkpoints": {
             "load_model_num": None,
             "run_type": "train",
+            # False: load the weights only and start fresh optimizer/step state (fine-tuning).
+            # True: also resume the trainer state (optimizer, step, epoch) from the checkpoint.
+            "resume_training": True,
         },
 
         "datasets": {
@@ -116,6 +133,17 @@ def get_default_config():
             "path_val_hoss": None,
             "path_test": None,
             "unstructured_mesh_scale": 1000.0,
+            # HOSS materials sampled for the embedding label (must match the data in path_hoss)
+            "hoss_materials": ["pbx", "shale", "tungsten"],
+            # Max random mesh displacement for HOSS training samples (0 = off); the
+            # DI_fractures hoss branch uses 0.0015 * 0.1
+            "hoss_mesh_displacement": 0.0,
+            # HOSS orientations used for training and for validation/test samples
+            # ("horizontal" = original orientation, "vertical" = x/y swapped).
+            "hoss_orientations": ["vertical", "horizontal"],
+            # Mesh augmentation for validation/test: null = deterministic default (horizontal flip),
+            # 0 = flip horizontal, 1 = flip vertical, 2 = both, 3 = no flip
+            "hoss_val_data_aug": None,
         },
 
         "embeddings": {
@@ -307,6 +335,39 @@ def validate_config(config, check_paths=True):
 
     sim_types, sim_errors = _active_sim_types(model_config)
     errors.extend(sim_errors)
+
+    loss_type = model_config.get("loss_type", "sigmoid_sum")
+    if loss_type not in LOSS_TYPES:
+        errors.append(f"model_params.loss_type must be one of {list(LOSS_TYPES)}")
+    loss_by_sim = model_config.get("loss_type_by_sim") or {}
+    if not isinstance(loss_by_sim, dict):
+        errors.append("model_params.loss_type_by_sim must be a dictionary")
+    else:
+        for name, value in loss_by_sim.items():
+            if name not in SUPPORTED_SIM_TYPES:
+                errors.append(f"Unknown simulation type in model_params.loss_type_by_sim: {name}")
+            if value not in LOSS_TYPES:
+                errors.append(f"model_params.loss_type_by_sim.{name} must be one of {list(LOSS_TYPES)}")
+    if not isinstance(model_config.get("test_output_dir", "test_samples"), str):
+        errors.append("model_params.test_output_dir must be a string")
+    hoss_materials = data_config.get("hoss_materials")
+    if not (isinstance(hoss_materials, list) and hoss_materials and all(isinstance(m, str) for m in hoss_materials)):
+        errors.append("datasets.hoss_materials must be a non-empty list of material names")
+    orientations = data_config.get("hoss_orientations")
+    if not (isinstance(orientations, list) and orientations and all(o in ("horizontal", "vertical") for o in orientations)):
+        errors.append("datasets.hoss_orientations must be a non-empty list of 'horizontal' and/or 'vertical'")
+    if data_config.get("hoss_val_data_aug") not in (None, 0, 1, 2, 3):
+        errors.append("datasets.hoss_val_data_aug must be null or one of 0, 1, 2, 3")
+    displacement = data_config.get("hoss_mesh_displacement", 0.0)
+    if not isinstance(displacement, (int, float)) or displacement < 0:
+        errors.append("datasets.hoss_mesh_displacement must be a non-negative number")
+    if not isinstance(checkpoints_config.get("resume_training", True), bool):
+        errors.append("checkpoints.resume_training must be true or false")
+    trainable = model_config.get("trainable")
+    if trainable is not None and not (
+        isinstance(trainable, list) and trainable and all(isinstance(t, str) for t in trainable)
+    ):
+        errors.append("model_params.trainable must be null or a non-empty list of parameter-name substrings")
 
     checked_paths = {}
     path_sections = {

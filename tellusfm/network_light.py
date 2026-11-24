@@ -5,12 +5,15 @@ import torch.nn.functional as F
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LambdaLR
 import pytorch_lightning as pl
-from skimage.metrics import structural_similarity as ssim
 
 from tellusfm.model import Encoder, Decoder
 from tellusfm.data_readers.rule_based import *
 from tellusfm.helper_functions import get_sample_prefix
 from tellusfm.senseiver_loader import create_senseiver_dataloader
+from tellusfm.read_input_yaml_file import LOSS_TYPES
+
+# dataset_key (set by the data readers) -> simulation type name used in the YAML
+DATASET_KEY_TO_SIM = {"rule_based": "RB", "phase_field": "PHASE", "hoss": "HOSS"}
 
 class Senseiver(pl.LightningModule):
 
@@ -56,6 +59,28 @@ class Senseiver(pl.LightningModule):
         self.num_params = sum([np.prod(p.size()) for p in model_parameters])
         print(f'\nThe model has {self.num_params} params \n')
 
+    def _loss_type_for(self, metadata):
+        """Loss type for a sample: per-simulation override, else the global loss_type."""
+        by_sim = self.hparams.get("loss_type_by_sim") or {}
+        sim = DATASET_KEY_TO_SIM.get(metadata.get("dataset_key"))
+        loss_type = by_sim.get(sim, self.hparams.get("loss_type", "sigmoid_sum"))
+        if loss_type not in LOSS_TYPES:
+            raise ValueError(f"Unknown loss_type {loss_type!r}; expected one of {list(LOSS_TYPES)}")
+        return loss_type
+
+    @staticmethod
+    def _field_prediction(pred_values, loss_type):
+        """Map raw network output to the predicted field."""
+        if loss_type == "relu_mean":
+            return F.relu(pred_values)
+        return torch.sigmoid(pred_values)
+
+    def _field_loss(self, pred_values, target_values, metadata):
+        loss_type = self._loss_type_for(metadata)
+        pred = self._field_prediction(pred_values, loss_type)
+        reduction = "mean" if loss_type == "relu_mean" else "sum"
+        return F.mse_loss(pred, target_values, reduction=reduction)
+
     def forward(self, input_values, coords, llm):
 
         out = self.encoder(input_values)
@@ -63,6 +88,9 @@ class Senseiver(pl.LightningModule):
 
     @staticmethod
     def _compute_ssim(img1: torch.Tensor, img2: torch.Tensor) -> float:
+        # imported here so scikit-image is only needed when SSIM is actually computed
+        from skimage.metrics import structural_similarity as ssim
+
         if img1.shape != img2.shape:
             raise ValueError("SSIM inputs must have the same shape")
 
@@ -185,7 +213,7 @@ class Senseiver(pl.LightningModule):
                 #single_value = single_value.to(device)
 
                 pred_values, _ = self(input_values, coords, llm)
-                pred_probs = torch.sigmoid(pred_values)
+                pred_probs = self._field_prediction(pred_values, self._loss_type_for(metadata))
 
                 # Save visualizations of test samples
                 try:
@@ -200,7 +228,8 @@ class Senseiver(pl.LightningModule):
                 sample_mse = float(((target_values - pred_probs) ** 2).mean().item())
 
                 image_size = getattr(self.hparams, "image_size", None)
-                if image_size is not None and len(image_size) >= 2:
+                # SSIM needs a regular image grid; unstructured (HOSS) samples have none
+                if image_size is not None and len(image_size) >= 2 and not metadata.get("is_unstructured", False):
                     height, width = image_size[:2]
                     pred_image = pred_probs.view(-1, height, width)
                     target_image = target_values.view(-1, height, width)
@@ -213,8 +242,9 @@ class Senseiver(pl.LightningModule):
                 summary["mae_count"] += abs_error.numel()
                 summary["mse_sum"] += loss_target.item()
                 summary["mse_sample_sum"] += sample_mse
-                summary["ssim_sum"] += batch_ssim
-                summary["ssim_count"] += 1
+                if not math.isnan(batch_ssim):
+                    summary["ssim_sum"] += batch_ssim
+                    summary["ssim_count"] += 1
                 summary["mae_sample_sum"] += sample_mae
                 summary["samples"] += 1
 
@@ -242,7 +272,7 @@ class Senseiver(pl.LightningModule):
             "mae": summary["mae_sum"] / max(1, summary["mae_count"]),
             "mse": summary["mse_sum"] / max(1, summary["mae_count"]),
             "mse_per_sample": summary["mse_sample_sum"] / max(1, summary["samples"]),
-            "ssim": summary["ssim_sum"] / max(1, summary["ssim_count"]),
+            "ssim": summary["ssim_sum"] / summary["ssim_count"] if summary["ssim_count"] else float("nan"),
             "mae_per_sample": summary["mae_sample_sum"] / max(1, summary["samples"]),
         }
 
@@ -255,7 +285,7 @@ class Senseiver(pl.LightningModule):
         pred_values, _ = self(input_values, coords, llm)
 
         # Losses
-        loss_target = F.mse_loss(F.sigmoid(pred_values), target_values, reduction='sum')
+        loss_target = self._field_loss(pred_values, target_values, metadata)
 
         self.train_losses.append(loss_target.detach().cpu().item())
         loss = loss_target
@@ -278,7 +308,7 @@ class Senseiver(pl.LightningModule):
         pred_values, _ = self(input_values, coords, llm)
 
         # Losses
-        val_loss_target = F.mse_loss(F.sigmoid(pred_values), target_values, reduction='sum')
+        val_loss_target = self._field_loss(pred_values, target_values, metadata)
         self.val_losses.append(val_loss_target.detach().cpu().item())
 
         val_loss = val_loss_target
@@ -301,30 +331,23 @@ class Senseiver(pl.LightningModule):
     def on_validation_epoch_end(self, outputs=None):
         self._plot_losses()
 
+    def _apply_trainable(self):
+        """Freeze all parameters except those whose name contains one of hparams.trainable."""
+        patterns = self.hparams.get("trainable")
+        if not patterns:
+            return
+        matched = 0
+        for name, param in self.named_parameters():
+            param.requires_grad = any(p in name for p in patterns)
+            matched += param.requires_grad
+        if matched == 0:
+            raise ValueError(f"model_params.trainable={list(patterns)} matches no parameters")
+        n_train = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        n_total = sum(p.numel() for p in self.parameters())
+        print(f"Fine-tuning: {n_train} of {n_total} parameters trainable ({list(patterns)})")
+
     def configure_optimizers(self):
-        # Freezing the trainable parameters
-        # for name, param in self.named_parameters():
-        #     param.requires_grad = False  # Freeze everything by default
-
-        # Only unfreeze single-value parameters
-        # for name, param in self.named_parameters():
-        #     if (
-        #         "output_single" in name or
-        #         "preproc_single" in name or
-        #         "postproc_single" in name
-        #         ):
-        #         param.requires_grad = True
-
-        # Printing the parameters:      
-        # for name, param in self.named_parameters():
-        #      print(f"{name} — requires_grad={param.requires_grad}")
-        # trainable_params = 0
-        # for name, param in self.named_parameters():
-        #   if param.requires_grad:
-        #     layer_count = param.numel()
-        #     trainable_params += layer_count
-        #     print(f"{name}: {layer_count} params")
-        # print(f"Total trainable parameters: {trainable_params}")
+        self._apply_trainable()
 
         optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, self.parameters()), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
         scheduler = CosineWithWarmupLR(optimizer, training_steps=self.hparams.max_steps, warmup_steps=self.hparams.warmup_steps)

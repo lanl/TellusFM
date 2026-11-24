@@ -10,24 +10,31 @@ def _load_hoss(self):
     method_label = 'finite-discrete element method'
     validation_sample = getattr(self, "_active_validation_sample", None)
     if validation_sample is None:
-        material = random.choice([ 'pbx','shale','tungsten'])
-        orientation = random.choice(["vertical", "horizontal"])
+        material = random.choice(self.hoss_materials)
+        orientation = random.choice(self.hoss_orientations)
         data_aug = random.choice([0,1,2,3])
         fracture_key = random.choice(self.simulation_list)
     else:
         variant_index = validation_sample["variant_index"]
-        materials = ["pbx", "shale", "tungsten"]
-        orientations = ["vertical", "horizontal"]
+        materials = self.hoss_materials
+        orientations = self.hoss_orientations
         material = materials[(variant_index // 8) % len(materials)]
         orientation = orientations[variant_index % len(orientations)]
         data_aug = (variant_index // 2) % 4
+        if self.hoss_val_data_aug is not None:
+            data_aug = self.hoss_val_data_aug
         fracture_key = validation_sample["fracture_key"]
 
 
+    # Link-table keys are either "Sample_<n>_frac_<m>" or the older "link_frac_pull_z_<m>"
     match = re.match(r"Sample_(\d+)_frac_(\d+)", fracture_key)
-    if not match:
-        raise ValueError(f"Invalid fracture key format: {fracture_key}")
-    fracture_num = int(match.group(2))
+    if match:
+        fracture_num = int(match.group(2))
+    else:
+        match = re.match(r"link_frac_pull_z_(\d+)$", fracture_key)
+        if not match:
+            raise ValueError(f"Invalid fracture key format: {fracture_key}")
+        fracture_num = int(match.group(1))
 
     hoss_file = self._get_hdf5_file("HOSS")
     linked_frac = hoss_file[fracture_key]
@@ -46,12 +53,15 @@ def _load_hoss(self):
     target = target[mask]
 
     mesh = midpoint(data[:, 0], data[:, 1], data[:, 3], data[:, 4])
+    # Half-vector of each line segment (midpoint -/+ half = the two endpoints); used for plotting
+    segment_half = np.stack([(data[:, 3] - data[:, 0]) / 2, (data[:, 4] - data[:, 1]) / 2], axis=1)
 
-    # Apply small random displacement
-    # max_disp = 0.0015 * 0.1
-    # disp = np.random.randn(2)
-    # disp /= np.linalg.norm(disp)
-    # mesh += disp * (np.random.rand() * max_disp)
+    # Small random displacement of the mesh (training only), as in the DI_fractures hoss branch.
+    # The displacement has random direction and a random length up to hoss_mesh_displacement.
+    if validation_sample is None and self.hoss_mesh_displacement > 0:
+        disp = np.random.randn(2)
+        disp /= np.linalg.norm(disp)
+        mesh = mesh + disp * (np.random.rand() * self.hoss_mesh_displacement)
     mesh = torch.tensor(mesh, dtype=torch.float32)
 
     initial_values = data[:, 6]
@@ -69,8 +79,17 @@ def _load_hoss(self):
     elif data_aug==2:
         mesh = flip_both_mesh(mesh)
 
+    # apply the same orientation / flip to the segment half-vectors (a flip negates one component)
+    if orientation == "vertical":
+        segment_half = segment_half[:, [1, 0]]
+    if data_aug in (0, 2):
+        segment_half[:, 0] *= -1
+    if data_aug in (1, 2):
+        segment_half[:, 1] *= -1
+
     order = np.lexsort((mesh[:, 1], mesh[:, 0]))   # primary key = y, secondary = x
     mesh = mesh[order]  
+    segment_half = segment_half[order].astype(np.float32)
     initial_values=initial_values[order]
     target_values=target_values[order]
 
@@ -83,6 +102,7 @@ def _load_hoss(self):
         data_aug=data_aug,
         fracture_key=fracture_key,
         fracture_num=fracture_num,
+        segment_half=segment_half,
     )
     if validation_sample is not None:
         metadata.update(
