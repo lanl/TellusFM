@@ -62,6 +62,92 @@ For more information on where to find the other training, validation and test se
 
 
 
+## Fine-Tuning Tasks
+
+Besides the pretrained model, the repository contains the configuration needed to fine-tune the model on
+additional data and to evaluate the result. The first task is **HOSS** (finite-discrete element simulations on an
+unstructured mesh).
+
+### HOSS
+
+#### 1. Data
+
+HOSS simulations are one HDF5 file per simulation, named `frac_pull_z_<id>.h5`, containing the datasets
+`model <id> fracture initial`, `model <id> fracture final` and `model <id> break time`.
+They are not included in the repository. Put them in a folder of your choice, for example `../data/hoss/`.
+
+Create a link table (one external link per simulation) for each split you want to use:
+
+```bash
+# validation / test split: all simulations in a folder
+python preprocessing/src_link_tables/create_links_hoss.py \
+    --source-dir ../data/hoss --output data/hoss/external_links/validation_link.h5 --check
+
+# training split: optionally restrict to the simulations listed in a text file (one file name or id per line)
+python preprocessing/src_link_tables/create_links_hoss.py \
+    --source-dir /path/to/hoss_train --ids-file train_ids.txt \
+    --output data/hoss/external_links/train_link.h5 --check
+```
+
+`--check` opens every simulation and verifies that the expected datasets exist. The link table stores paths
+relative to itself, so keep the link table and the data in the same relative location.
+
+The text embeddings go in one folder, named `<material>_finite-discrete element method_<orientation>_<i>.torch`
+with `i` from 0 to 19, for example `pbx_finite-discrete element method_horizontal_7.torch`.
+The default location is `data/hoss/embeddings/`.
+
+You also need a checkpoint, for example `models/hoss_finetuning.ckpt` for evaluation, or the pretrained
+`models/material_fracturing_model.ckpt` as the starting point of a fine-tune.
+
+#### 2. Test (evaluate a checkpoint)
+
+```bash
+python example/validate_config.py example/test_hoss.yaml      # check the paths first
+python example/main.py --config example/test_hoss.yaml --log_filename test_hoss
+```
+
+`example/test_hoss.yaml` evaluates the checkpoint in `checkpoints.load_model_num` on the simulations in
+`datasets.path_test`. The summary (MAE, MSE; SSIM is not defined for unstructured meshes) is printed at the end,
+and one plot per simulation is written to `model_params.test_output_dir` (default `test_samples`, relative to
+`path_working_directory`, which itself is relative to the folder of the YAML file).
+
+#### 3. Train (fine-tune)
+
+```bash
+python example/validate_config.py example/train_hoss.yaml
+python example/main.py --config example/train_hoss.yaml --log_filename train_hoss
+```
+
+`example/train_hoss.yaml` loads the weights from `checkpoints.load_model_num` and starts a fresh optimizer
+(`checkpoints.resume_training: false`). Training uses `datasets.path_hoss` and validates after every epoch on
+`datasets.path_val_hoss`. Outputs, relative to `path_working_directory`:
+
+- `lightning_logs/version_<job id>/checkpoints/`: checkpoints,
+- `logs/training_metrics/` and `logs/val_metrics/`: metrics as CSV,
+- `logs/val_metrics/version_<job id>/validation_samples/`: validation plots and the `.npy` arrays behind them.
+
+The example is written for a GPU node (`accelerator: gpu`, `devices: 8`). For a quick local test set
+`accelerator: cpu`, `devices: 1` and a small `number_samples_per_epoch`.
+
+#### 4. HOSS options
+
+| Option | Meaning |
+|---|---|
+| `model_params.loss_type` | `relu_mean`: MSE of `relu(output)`, averaged over points (HOSS). `sigmoid_sum`: MSE of `sigmoid(output)`, summed (default, original TellusFM loss). Use the one the checkpoint was trained with. |
+| `model_params.loss_type_by_sim` | Per-simulation override, e.g. `{HOSS: relu_mean}` in a `MIXED` run. |
+| `model_params.trainable` | `null` trains all parameters. A list of parameter-name substrings freezes everything else, e.g. `[output_field, postproc_field]`. |
+| `model_params.test_output_dir` | Folder for the test plots. |
+| `model_params.val_samples_per_sim` | Validation passes per simulation (use `1` with a single orientation). |
+| `checkpoints.resume_training` | `false`: load the weights only. `true`: also resume optimizer, step and epoch from the checkpoint. |
+| `datasets.hoss_materials` | Materials used for the text embedding label, e.g. `[pbx]`. Must match the data in the link table. |
+| `datasets.hoss_orientations` | `[horizontal]`, `[vertical]` or both. `vertical` swaps x and y. |
+| `datasets.hoss_mesh_displacement` | Maximum random displacement (metres) added to training meshes, `0` to switch off. |
+| `datasets.hoss_val_data_aug` | Validation/test mesh flip: `0` horizontal, `1` vertical, `2` both, `3` none, `null` default. |
+| `embeddings.emb_hoss`, `embeddings.num_embedding_variants` | Embedding folder and number of variants per material and orientation (20). |
+
+In training a random embedding variant is drawn for every sample. Validation and test use variant
+`sample index % num_embedding_variants`, so the results are reproducible.
+
 ### Notice of Copyright Assertion (O4924):
 
 *This program is Open-Source under the BSD-3 License.
