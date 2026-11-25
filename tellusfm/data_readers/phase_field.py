@@ -9,8 +9,31 @@ mat_h5_type = {
                'pbx': 'pbx',
                'al': 'aluminum',
                'shale': 'shale',
-               'tungsten': 'tungsten'
+               'tungsten': 'tungsten',
+               # materials added by the fine-tuning tasks (link-table keys use either spelling)
+               'ti': 'titanium',
+               'titanium': 'titanium',
+               'concrete': 'concrete',
            }
+
+
+def _flip_pair(data, target, mode):
+    """Random mirror augmentation of an (H, W, 1) input / target pair (training only).
+
+    mode "full"  : one of {mirror columns, mirror rows, both, none}, each with probability 1/4.
+    mode "legacy": reproduces the DI_fractures ``new_material`` branch. There the "horizontal flip" used
+                   ``torch.flip(dims=[-1])``, which for an (H, W, 1) tensor flips the size-1 channel axis (a no-op),
+                   and the "vertical" and "both" flips both used ``dims=[-2]``/``[-2, -1]``, i.e. they mirror the
+                   columns. Net effect: the columns are mirrored with probability 1/2.
+    """
+    choice = random.choice([0, 1, 2, 3])
+    if mode == "legacy":
+        dims = {0: [], 1: [1], 2: [1], 3: []}[choice]
+    else:
+        dims = {0: [1], 1: [0], 2: [0, 1], 3: []}[choice]
+    if dims:
+        data, target = torch.flip(data, dims=dims), torch.flip(target, dims=dims)
+    return data, target
 
 def _load_phase_field(self):
     method_label = 'phase-field method'
@@ -67,6 +90,9 @@ def _load_phase_field(self):
     if bc == "z" and orientation in {"vertical", "horizontal"} and orientation != source_orientation:
         data = data.transpose(0, 1)
         target = target.transpose(0, 1)
+
+    if validation_sample is None and self.phase_flip_augmentation != "none":
+        data, target = _flip_pair(data, target, self.phase_flip_augmentation)
 
     metadata = build_sample_metadata(
         dataset_key="phase_field",

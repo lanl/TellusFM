@@ -29,7 +29,7 @@ The script uses the following inputs:
 - `MODEL_ID`: currently set to `meta-llama/Meta-Llama-3.1-8B-Instruct`
 - `HUGGINGFACE_API_TOKEN`: must be set in the environment
 - 20 prompt templates in `prompt_templates`
-- `material_types`: `steel`, `pbx`, `aluminum`, `shale`, `tungsten`
+- `material_types`: `steel`, `pbx`, `aluminum`, `shale`, `tungsten`, `titanium`, `concrete`
 - `fracture_types`: `phase-field method`, `T-fracture rule-based mode`, `X-fracture rule-based mode`
 - `directions`: `horizontal`, `combined`, `vertical`
 - device selection via PyTorch auto-detection:

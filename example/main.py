@@ -191,7 +191,12 @@ if __name__ == '__main__':
         
         loggers = [tensorboard_logger, train_logger, val_logger]
 
+        extra_trainer_args = {}
+        if model_config.get("max_epochs") is not None:
+            extra_trainer_args["max_epochs"] = int(model_config["max_epochs"])
+
         trainer = Trainer( max_steps = model_config['max_steps'],
+                           **extra_trainer_args,
                            callbacks = callbacks,
                            devices = model_config["devices"],
                            accelerator = model_config['accelerator'],

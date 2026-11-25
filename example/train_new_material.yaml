@@ -1,0 +1,74 @@
+# Fine-tune the pretrained TellusFM checkpoint on a new phase-field material (titanium; also used for concrete).
+# Settings mirror the DI_fractures new_material branch (train.py, s_parser.py defaults, sbatch.sh):
+# sigmoid + summed-MSE loss, lr 1e-4, accum 64, warmup 1000, one epoch of 100000 samples, only the
+# field head and the decoder cross-attention blocks trained, fresh optimizer state.
+model_params:
+  num_workers: 1
+  num_nodes: 1
+  devices: 4                 # branch: devices=4 (set to 1 / accelerator: cpu for a local test)
+  seed: 95
+  batch_pixels: 10000
+  lr: 0.0001
+  accum_grads: 64
+  warmup_steps: 1000
+  max_steps: 100000000
+  max_epochs: 1              # branch: Trainer(max_epochs=1)
+  gradient_clip_val: 0.5
+  weight_decay: 0.01
+  sim_type: 'PHASE'
+  sim_weights:
+    PHASE: 1.0
+  accelerator: gpu
+  space_bands: 32
+  check_val_every_n_epoch: 1
+  every_n_epochs: 1
+  every_n_train_steps: 1000
+  flush_logs_every_n_steps: 10000
+  number_samples_per_epoch: 100000   # branch: __len__ = 100000 (titanium); the concrete variants used 100
+  path_working_directory: '.'
+
+  # The branch keeps the original TellusFM loss: MSE(sigmoid(output), target), summed over points
+  loss_type: 'sigmoid_sum'
+  # Only these parameters are trained, as in the branch. Note: "preproc_field" matches no parameter
+  # (the decoder input projection is called "preproc"), so, as in the branch, it stays frozen.
+  # Add 'decoder_1.preproc' to train it as well, or use `trainable: null` to train everything.
+  trainable:
+    - output_field
+    - preproc_field
+    - postproc_field
+    - decoder_1.cross_attention
+
+encoder:
+  enc_preproc_ch: 512
+  num_latents: 2048
+  enc_num_latent_channels: 512
+  num_layers: 3
+  num_cross_attention_heads: 2
+  enc_num_self_attention_heads: 2
+  num_self_attention_layers_per_block: 3
+  dropout: 0.0
+
+decoder:
+  dec_preproc_ch: 512
+  dec_num_latent_channels: 512
+  dec_num_cross_attention_heads: 1
+  latent_size: 1
+
+checkpoints:
+  load_model_num: '../models/material_fracturing_model.ckpt'   # the branch starts from the pretrained model
+  run_type: 'train'
+  resume_training: false     # load the weights only (branch: ckpt_path is commented out)
+
+datasets:
+  # Link tables built with preprocessing/src_link_tables/create_links_phase_train_val.py from
+  # <material>_train/ and <material>_validation/ folders (e.g. ti_train/, ti_validation/).
+  path_phase: '../data/phase_field/external_links/train_link.h5'
+  path_val_phase: '../data/phase_field/external_links/validation_link.h5'
+  # Branch: random mirroring of the training images. "legacy" reproduces it exactly (columns mirrored with
+  # probability 1/2, see tellusfm/data_readers/phase_field.py), "full" mirrors columns/rows/both/none, "none" disables it.
+  phase_flip_augmentation: legacy
+
+embeddings:
+  # <material>_phase-field method_<orientation>_<i>.torch with i in 0..19, e.g. titanium_phase-field method_horizontal_3.torch
+  emb_phase: '../data/phase_field/embeddings'
+  num_embedding_variants: 20

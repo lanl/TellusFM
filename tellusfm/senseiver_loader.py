@@ -54,6 +54,7 @@ class SenseiverLoaderTraining(Dataset):
         self.hoss_orientations = list(data_config.get("hoss_orientations") or ["vertical", "horizontal"])
         val_aug = data_config.get("hoss_val_data_aug")
         self.hoss_val_data_aug = None if val_aug is None else int(val_aug)
+        self.phase_flip_augmentation = str(data_config.get("phase_flip_augmentation") or "none").lower()
 
         self.path_emb_by_sim = {
             "RB": embeddings_config.get("emb_rule_based"),

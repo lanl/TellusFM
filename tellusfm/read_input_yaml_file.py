@@ -109,6 +109,8 @@ def get_default_config():
             "test_bc": "auto",
             # Folder for the test plots: absolute, or relative to path_working_directory
             "test_output_dir": "test_samples",
+            # Stop after this many epochs (null: only max_steps limits the run)
+            "max_epochs": None,
             # Field loss. "loss_type_by_sim" overrides "loss_type" per simulation type,
             # e.g. {"HOSS": "relu_mean"} to use a different loss for HOSS only.
             "loss_type": "sigmoid_sum",
@@ -133,6 +135,9 @@ def get_default_config():
             "path_val_hoss": None,
             "path_test": None,
             "unstructured_mesh_scale": 1000.0,
+            # Mirror augmentation of phase-field training samples: "none", "full" (mirror columns/rows/both/none,
+            # 1/4 each) or "legacy" (DI_fractures new_material behaviour: columns mirrored with probability 1/2)
+            "phase_flip_augmentation": "none",
             # HOSS materials sampled for the embedding label (must match the data in path_hoss)
             "hoss_materials": ["pbx", "shale", "tungsten"],
             # Max random mesh displacement for HOSS training samples (0 = off); the
@@ -350,6 +355,11 @@ def validate_config(config, check_paths=True):
                 errors.append(f"model_params.loss_type_by_sim.{name} must be one of {list(LOSS_TYPES)}")
     if not isinstance(model_config.get("test_output_dir", "test_samples"), str):
         errors.append("model_params.test_output_dir must be a string")
+    if str(data_config.get("phase_flip_augmentation") or "none").lower() not in ("none", "full", "legacy"):
+        errors.append("datasets.phase_flip_augmentation must be one of none, full, legacy")
+    max_epochs = model_config.get("max_epochs")
+    if max_epochs is not None and not (isinstance(max_epochs, int) and not isinstance(max_epochs, bool) and max_epochs >= 1):
+        errors.append("model_params.max_epochs must be null or a positive integer")
     hoss_materials = data_config.get("hoss_materials")
     if not (isinstance(hoss_materials, list) and hoss_materials and all(isinstance(m, str) for m in hoss_materials)):
         errors.append("datasets.hoss_materials must be a non-empty list of material names")

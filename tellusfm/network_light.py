@@ -89,7 +89,13 @@ class Senseiver(pl.LightningModule):
     @staticmethod
     def _compute_ssim(img1: torch.Tensor, img2: torch.Tensor) -> float:
         # imported here so scikit-image is only needed when SSIM is actually computed
-        from skimage.metrics import structural_similarity as ssim
+        try:
+            from skimage.metrics import structural_similarity as ssim
+        except ImportError:
+            if not getattr(Senseiver, "_ssim_warned", False):
+                print("Warning: scikit-image is not installed, SSIM is not computed (reported as nan)")
+                Senseiver._ssim_warned = True
+            return float("nan")
 
         if img1.shape != img2.shape:
             raise ValueError("SSIM inputs must have the same shape")

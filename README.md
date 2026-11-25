@@ -148,6 +148,65 @@ The example is written for a GPU node (`accelerator: gpu`, `devices: 8`). For a 
 In training a random embedding variant is drawn for every sample. Validation and test use variant
 `sample index % num_embedding_variants`, so the results are reproducible.
 
+### New phase-field materials (titanium, concrete)
+
+Fine-tunes the pretrained model on a material that is not part of the pretraining data, using the same
+phase-field file format and reader as the existing materials (`titanium`, `concrete`; aluminum, pbx, shale, steel
+and tungsten are supported as before).
+
+#### 1. Data
+
+Put the simulation files in folders named `<material>_train/` and `<material>_validation/` below one source
+folder, for example `ti_train/frac_pull_z_<id>.h5`, `ti_validation/frac_pull_z_<id>.h5` (`frac_pull_xz_<id>.h5` for
+the combined loading). A file holds `fracture initial` and `fracture final` (or `model <id> fracture initial` and
+`model <id> fracture final`) as 2D arrays; the image size can differ from the pretraining data (titanium is 128 x 128).
+Use the folder prefix `ti` or `titanium` for titanium, and `concrete` for concrete. Then build the link tables:
+
+```bash
+python preprocessing/src_link_tables/create_links_phase_train_val.py \
+    --source-dir /path/to/source --output-dir data/new_material/external_links
+```
+
+Every `<material>_train` / `<material>_validation` folder below `--source-dir` ends up in the same
+`train_link.h5` / `validation_link.h5`, so use a separate source folder for each fine-tuning task.
+
+The embeddings are named `<material>_phase-field method_<orientation>_<i>.torch` (orientation `horizontal`,
+`vertical` and, for the combined loading, `combined`; `i` from 0 to 19). `titanium` and `concrete` have been added to
+the material list of `preprocessing/src_embeddings/embeddings.py`.
+
+#### 2. Train
+
+Set the paths in `example/train_new_material.yaml` (`datasets.path_phase`, `datasets.path_val_phase`,
+`embeddings.emb_phase`, `checkpoints.load_model_num`), then
+
+```bash
+python example/validate_config.py example/train_new_material.yaml
+python example/main.py --config example/train_new_material.yaml --log_filename train_new_material
+```
+
+The configuration reproduces the DI_fractures `new_material` setup: loss `sigmoid_sum`, learning rate 1e-4,
+gradient accumulation 64, warmup 1000, one epoch of 100000 samples (`max_epochs: 1`), only the field head and the
+decoder cross-attention blocks trained (`trainable`), a fresh optimizer (`resume_training: false`) and random
+mirroring of the training images (`phase_flip_augmentation: legacy`). Set `trainable: null` to train all parameters.
+
+#### 3. Test
+
+```bash
+python example/main.py --config example/test_new_material.yaml --log_filename test_new_material
+```
+
+Set `checkpoints.load_model_num` to the fine-tuned checkpoint and `datasets.path_test` to the validation link table.
+For phase-field data the vertical/horizontal orientation of each simulation is controlled by `model_params.test_bc`
+(`auto`, `vertical`, `horizontal`, `combined`, `all`).
+
+#### 4. Options
+
+| Option | Meaning |
+|---|---|
+| `model_params.max_epochs` | Stop after this many epochs (`null`: only `max_steps` limits the run). |
+| `model_params.trainable` | List of parameter-name substrings that stay trainable; `null` trains everything. `preproc_field` matches no parameter (as in the original branch), add `decoder_1.preproc` to train the decoder input projection too. |
+| `datasets.phase_flip_augmentation` | Mirroring of training images. `none`; `full`: mirror columns, rows, both or neither with probability 1/4 each; `legacy`: the original branch behaviour, which mirrors the columns with probability 1/2. In the branch the "horizontal flip" was applied to the size-1 channel axis and had no effect, so `legacy` is not the same as `full`. |
+
 ### Notice of Copyright Assertion (O4924):
 
 *This program is Open-Source under the BSD-3 License.
